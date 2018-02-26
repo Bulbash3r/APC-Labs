@@ -21,9 +21,9 @@ int main()
 		{
 				system("cls");
 				scanf("%lf %lf %lf", &a, &b, &step);
-				puts("");
 				x = a;
 				f = 0;
+				printf("F = sin(x)/(x^2+10)\n");
 				start_math = clock();
 				//Вычисление функции при помощи библиотеки math.h
 				while (x <= b)
@@ -52,7 +52,7 @@ int main()
 								jz loop_end
 
 								fldz		//Загружаем ноль
-								fadd x	//Прибалвяем х
+								fadd x	//Прибавляем х
 								fsin		//Вычисляем синус
 
 								fld x		//Загружаем х
