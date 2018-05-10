@@ -9,9 +9,8 @@
 unsigned int delayTime = 0;
 
 char date[6];
-/*
-* Секунда, минута, час, день месяца, месяц, год
-*/
+
+/* Секунда, минута, час, день, месяц, год */
 unsigned int registers[] = { 0x00, 0x02, 0x04, 0x07, 0x08, 0x09 };
 
 /* Старые прерывания */
@@ -35,7 +34,7 @@ void interrupt newTimer(...)
     outp(0x70, 0x0C);
     inp(0x71);
 
-    /* Посылаем контроллерам прерываний сигнал EOI (end of interruption)*/
+    /* Посылаем контроллерам прерываний сигнал end of interruption */
     outp(0x20, 0x20);
     outp(0xA0, 0x20);
 }
