@@ -1,60 +1,69 @@
 #include <dos.h>
 #include <conio.h>
 #include <stdio.h>
-#include <stdlib.h>
-
-void interrupt (*old9)(...);
-void interrupt new9(...)
-{
-	char buf[5];
-	unsigned char c = inp(0x60);
-
-	if (c != 0xFA)
-	{
-		puts("Button   ");
-		itoa(c, buf, 16);
-		cputs("0x");
-		cputs(buf);
-		cputs("\n\r");
-	}
-	(*old9)();
-}
-
-void blink(int a)
-{
-	int i = 0;
-	while((inp(0x64) & 2) != 0);
-
-	do
-	{
-		i++;
-		outp(0x60, a);
-	}while (inp(0x60) == 0xFE && i < 3);
-}
-
+void interrupt NewInterrupt(...);
+void interrupt(*oldInterrupt)(...);
+void UpdateHighlightFlag(unsigned char);
+void SetMask(unsigned char mask);
+int commandIsExecuted;
+int quitFlag;
+int needHighlight;
 void main()
 {
-	clrscr();
-	old9 = getvect(0x09);
-	setvect(0x09, new9);
-	printf("\r\n(Press ESC to exit program)\n\rTap any key:");
-	int i;
-
-	while(1)
-	{
-		for (i = 0; i < 8; i++)
+		commandIsExecuted = 0;
+		quitFlag = 0;
+		needHighlight = 0;
+		oldInterrupt = getvect(9);
+		setvect(9, NewInterrupt);
+		while (!quitFlag)
 		{
-			if(kbhit())
-				if(getch() == 27)
+				if (needHighlight)
 				{
-					setvect(0x09, old9);
-					return;
+						SetMask(0x02);
+						delay(1000);
+						SetMask(0x00);
+						delay(1000);
+						SetMask(0x02);
+						delay(500);
+						SetMask(0x00);
+						delay(1000);
+						needHighlight = 0;
 				}
-			blink(0xED);
-			blink(i);
-			delay(100);
 		}
-	}
+		setvect(9, oldInterrupt);
+		return;
 }
-
-
+void interrupt NewInterrupt(...)
+{
+		unsigned char value = 0;
+		oldInterrupt();
+		value = inp(0x60);
+		if (value == 0x01) { quitFlag = 1; }
+		UpdateHighlightFlag(value);
+		commandIsExecuted = commandIsExecuted || (needHighlight == 0) || (value == 0xFA);
+		printf("\t%x", value);
+		outp(0x20, 0x20);
+}
+void UpdateHighlightFlag(unsigned char value)
+{
+		if (value != 0x1c) { return; }
+		if (needHighlight)
+		{
+				needHighlight = 0;
+		}
+		else
+		{
+				needHighlight = 1;
+		}
+}
+void SetMask(unsigned char mask)
+{
+		commandIsExecuted = 0;
+		while (!commandIsExecuted)
+		{
+				while ((inp(0x64) & 0x02) != 0x00);
+				outp(0x60, 0xED);
+				outp(0x60, mask);
+				delay(50);
+		}
+}
